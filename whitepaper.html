@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReForge 回炉 — Whitepaper v0.9</title>
+<style>
+  :root{--bg:#0c0906;--panel:#1a140c;--line:#3a2c18;--txt:#f0e6d6;--dim:#c9b995;--gold:#f5c542;--ember:#ff7a18;--ember2:#ff9a3c;--teal:#57c9a3;--mono:"Courier New",ui-monospace,Menlo,monospace}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.8;font-size:16px}
+  .wrap{max-width:860px;margin:0 auto;padding:0 20px 60px}
+  header{border-bottom:2px solid var(--line);padding:16px 0;margin-bottom:34px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  .logo{font-family:var(--mono);font-weight:bold;font-size:19px}
+  .logo span{color:var(--ember)}
+  header a{color:var(--ember2);text-decoration:none;font-size:14px}
+  header a:hover{text-decoration:underline}
+  header .sp{margin-left:auto}
+  h1{font-size:30px;line-height:1.3;margin:10px 0 14px;color:var(--txt)}
+  h2{font-size:22px;color:var(--gold);margin:36px 0 12px;border-bottom:2px solid var(--line);padding-bottom:6px}
+  h3{font-size:18px;margin:24px 0 8px}
+  p{color:var(--dim);margin:10px 0}
+  strong{color:var(--txt)}
+  ul,ol{color:var(--dim);padding-left:24px;margin:10px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;display:block;overflow-x:auto}
+  th,td{border:2px solid var(--line);padding:8px 10px;text-align:left;color:var(--dim)}
+  th{background:var(--panel);color:var(--gold)}
+  code{font-family:var(--mono);font-size:13px;background:#000;border:1px solid var(--line);padding:1px 5px;color:var(--teal);word-break:break-all}
+  pre{background:#000;border:2px solid var(--line);padding:12px;overflow-x:auto}
+  pre code{border:none;padding:0}
+  hr{border:none;border-top:2px dashed var(--line);margin:30px 0}
+  blockquote{border-left:4px solid var(--ember);padding:4px 14px;margin:14px 0;background:var(--panel)}
+  a{color:var(--ember2)}
+  em{color:var(--dim)}
+  footer{margin-top:50px;border-top:2px solid var(--line);padding-top:18px;color:#7d6f57;font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo">ReForge <span>回炉</span></div>
+  <a class="sp" href="index.html">← Back to site</a>
+</header>
+<h1>ReForge（回炉）白皮书</h1>
+<p><strong>副标题：BNB Chain 上首个只为 AI Agent 钱包开放的 NFT 回收重铸协议</strong>
+版本：v0.9 草案（2026-10-31，美术定稿 + 主网合约上链）｜状态：共创中，未定稿｜部署链：BNB Smart Chain（BSC）</p>
+<hr />
+<h2>1. 一句话</h2>
+<p><strong>烧 5 枚没用的 NFT，换 1 个认购资格；拿资格 + 1 USDT，铸 1 枚全新 NFT，同时到账 10,000 枚代币。第一季 5,000 枚铸满，代币立即开池交易。</strong></p>
+<p>两步走，每一步都简单：
+- 第一步「回炉」不要钱 — 烧垃圾，拿资格；
+- 第二步「认购」才花钱 — 1 USDT 铸新 NFT，跟所有 NFT 正常 mint 一样。</p>
+<p>用户烧的东西和付的钱不在同一笔交易里发生：先用废纸换来稀缺资格，再心甘情愿为铸造付费 — 这是白名单 mint 的经典心智，不是「烧了东西还被收费」。</p>
+<h2>2. 为什么需要它</h2>
+<p>币安 Agent 生态上线以来，免费打新爆发，每个 Agentic Wallet 里都堆了几十枚没市场、没流动性、没后续的 NFT。以发起方钱包为例：55 个系列、71 件 NFT，真正有市场的不到 10 个系列，其余全是躺着的「电子垃圾」。</p>
+<p>扔了可惜，留着没用。ReForge 给它们一个出口：烧掉换资格，再铸一枚有设计、有稀缺、有代币空投的新 NFT。</p>
+<h2>3. 谁能玩</h2>
+<p>只有持有 .ai Agent ID 的币安 Agentic Wallet 能参与，合约层查 Agent ID 注册表（0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F）。</p>
+<p>另外只做一次签名挑战，证明背后确实有个能签名的 Agent 在操作 — 不查历史、不查天数（生态才上线几天，没有历史可查）、不要求质押。</p>
+<h2>4. 第一步：回炉拿资格</h2>
+<ol>
+<li>从钱包里选 5 枚要烧的 NFT（只能选快照名单内的存量 token，见第 7 节）；</li>
+<li>一笔交易内全部永久销毁（支持 burn 的走原生销毁，不支持的转入公开焚化地址 0x000000000000000000000000000000000000dEaD，任何人可在浏览器核验），销毁全部成功才算数，任何一步失败整笔回滚、NFT 一枚不少；</li>
+<li>钱包记上 <strong>1 个认购资格</strong>（合约内记账，不可转让）。烧 50 枚就是 10 个资格。</li>
+</ol>
+<p><strong>先说清三件事（写在回炉页面最醒目处）：</strong>
+- 销毁不可逆，烧之前看清选的是什么 — 页面对有在售挂单或地板价较高的 NFT 会弹警告；
+- 资格只在本季有效，季末作废；<strong>请确认自己打算认购再烧</strong>，烧了不用、资格过期，NFT 不退；
+- 烧掉的 NFT 永不复活、永不重发，这是写死的承诺。</p>
+<h2>5. 第二步：认购铸造</h2>
+<ol>
+<li>拿 1 个资格 + 付 <strong>1 USDT</strong>（付的这一刻，钱当场进项目合约，公开可查）；</li>
+<li>当场铸出 1 枚本季新 NFT：盲盒开盒，稀有度由链上区块哈希随机决定：认购时锁定一个未来区块（当前区块 +3），该区块的哈希与认购者地址、铸造序号共同算出结果 — 认购时结果尚不存在、任何人算不出，区块出来后任何人都能复算验证，项目方与用户谁都无法操纵，概率提前公开（普通 70% / 3,500 枚、稀有 22% / 1,100 枚、史诗 6.5% / 325 枚、传说 1.5% / 75 枚），图池哈希提前上链锁定，开盒前图就定死了，不存在事后换皮；</li>
+<li>同时到账 <strong>10,000 枚项目代币</strong>（暂名 FORGE），开池前锁定不可转让，开池瞬间自动解锁。</li>
+</ol>
+<p>每个钱包本季最多 <strong>10 个资格</strong>（最多烧 50 枚计入）、最多认购 <strong>10 枚</strong>，防大户包场：满额 5,000 枚至少需要 500 个钱包才能打完，单个钱包最多拿到全季 0.2% 的份额与空投。</p>
+<p>认购款分账，只分两笔，写入合约：
+- <strong>70% 项目收入</strong>：美术、开发、审计、运营；
+- <strong>30% 开池/回购池</strong>：开池前攒着作配对 USDT；开池后转为回购 — 买地板上的本季 NFT 买回来烧掉。</p>
+<h2>6. 代币与开池</h2>
+<p>代币暂名 FORGE，总量 1 亿枚，只分四份，全部公开：</p>
+<table>
+<thead>
+<tr>
+<th>分配</th>
+<th>数量</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>铸造空投</td>
+<td>50,000,000（50%）</td>
+<td>10,000 枚 × 5,000 枚 NFT，全给真实回炉认购者</td>
+</tr>
+<tr>
+<td>后续季储备</td>
+<td>24,000,000（24%）</td>
+<td>锁仓钱包，专供第二季起的铸造空投</td>
+</tr>
+<tr>
+<td>项目方</td>
+<td>20,000,000（20%）</td>
+<td>链上锁仓合约，6 个月线性解锁，不预售、不私募</td>
+</tr>
+<tr>
+<td>开池流动性</td>
+<td>6,000,000（6%）</td>
+<td>开池时与手续费池 USDT 配对建池，LP 锁定并公示</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>满 5,000 枚，立即开池</strong>：第 5,000 枚铸出的同一笔交易里，合约自动用 600 万枚代币 + 开池池攒下的 USDT（满额约 1,500 USDT）在 PancakeSwap 建池 — 没有人工步骤、没有等待公告，任何人无法抢跑或拖延。开盘参考价约 0.00025 USDT/枚，每份空投按开盘价约值 2.5 USDT；</li>
+<li><strong>明示风险</strong>：这个池子起步很薄，开盘波动会很大，涨跌由市场决定，项目方不托底喊单；</li>
+<li><strong>防绑死条款（写死）</strong>：若本季窗口到期未满 5,000 枚，按实际已铸数量在到期时照常由合约自动开池、代币照常解锁；<strong>所有代币分配按实际铸造比例同步缩放</strong>（空投、流动性、储备同比例），保证任何认购进度下开盘参考价都是约 0.00025、每份空投都约值 2.5 USDT；没发出去的空投代币在开池时当场销毁。绝不出现「差几十枚不开池、代币永远锁死」的情况 — 这一条是本项目与跑路盘的分界线；</li>
+<li>不另外发币、不承诺收益。项目收入除第 5 节的认购款分成外，还有：项目方赞助（死项目付费进可烧名单，B 端收入，不向用户收）与新 NFT 二级版税 5%（按收不到做预算）。</li>
+</ul>
+<h2>7. 防刷与安全（漏洞审查后写死的规则）</h2>
+<p>上线前自查出的问题与对策，全部公开：</p>
+<ol>
+<li><strong>最大的漏洞 — 只认快照前的 token</strong>：很多生态项目现在还在免费铸造，若只看合约名单，攻击者可以现铸 5 枚免费垃圾马上烧掉刷资格，成本只有 gas。对策：每季快照时记录每个可烧合约的当时总供应，<strong>只有 tokenId 在快照供应范围内的存量 token 能烧</strong>；快照后新铸的（哪怕同一合约）一律不认。在市场上买存量垃圾凑数不受影响 — 凑数买盘正是我们想给死项目地板带来的需求；</li>
+<li><strong>本季参数冻结</strong>：可烧名单、价格、空投数、概率一旦开季全部锁定，管理员也不能改；要改只能下一季重新公告。杜绝中途塞进自家新合约刷量；</li>
+<li><strong>开池自动触发</strong>：见第 6 节，没有人工开池这一步，团队没机会拖延或抢跑；</li>
+<li><strong>锁仓全上链</strong>：项目方代币、后续季储备、LP 全部走链上锁仓/锁定合约，不靠口头承诺；</li>
+<li><strong>合约安全基线</strong>：回炉与认购合约防重入；只与名单内已验证源码的合约交互；金库多签；管理员权限清单全公开；没有隐藏的提款、增发、改价后门 — 一个都不留；上线前第三方审计并公开报告。</li>
+</ol>
+<h2>8. 新 NFT 有什么用</h2>
+<ul>
+<li>它是真资产：有回购池、有二级市场，还有 10,000 枚代币已经跟它一起到账；</li>
+<li>下一季它也能当材料烧：计 1 枚，不搞特殊倍率，保持规则简单；</li>
+<li>持有者优先：下一季回炉窗口对本季持有者提前开放。</li>
+</ul>
+<h2>9. 路线图</h2>
+<ul>
+<li>P0：白皮书定稿（本阶段）；</li>
+<li>P1：测试网跑通「选 10 枚 → 烧 → 得资格 → 付 1U → 铸 NFT + 到账代币」全流程；</li>
+<li>P2：主网第一季，限量 5,000 枚，铸满自动开池；</li>
+<li>P3：开放项目方赞助名单，一季一个合作主题。</li>
+</ul>
+<h2>10. 还没定的参数（等共创拍板）</h2>
+<ol>
+<li>项目名与代币名（ReForge / FORGE 为暂名）；</li>
+<li>第一季美术主题；</li>
+<li>盲盒保底次数（连续开多少次必出稀有）；</li>
+<li>快照时点（建议：每季公告前的一个区块，公告时公布）与第一季窗口时长。</li>
+</ol>
+<h2>11. 可行性测算（2026-10-31，基于当下生态存量）</h2>
+<ul>
+<li><strong>存量够不够烧</strong>：监控覆盖的 584 个候选项目中，242 个可读到已铸总量的 NFT 合约合计已铸约 52.8 万枚（中位数 1,128 枚/个），按全生态约 600 个项目外推，总存量约 80 万–110 万枚。本季满额需烧 25,000 枚，只占存量的约 2.3%–4.7% — 供给侧完全不是瓶颈；</li>
+<li><strong>需求有没有先例</strong>：同生态 1 USDT 份额盘多次出现数千份快速售罄（ReSAFU 4,444 份约半天售罄、认购钱包至少 445 个）。本季 5,000 份按人均认购 5 枚估算需约 1,000 个钱包参与，人均需 25 枚存量 — 活跃打新钱包人均持有数十枚（发起方钱包 71 件，按上限实际可得 10 个资格），门槛内的人群足够；手里不足 5 枚的，可在二级市场以尘埃价买存量凑数（最便宜挂单约 0.00003 BNB 级别）；</li>
+<li><strong>每份账算得平</strong>：用户付 1 USDT + 烧 5 枚近零成本垃圾，得 NFT + 空投（开盘参考约值 2.5 USDT）；代币价要跌破开盘参考价 60%（跌到 0.0001 以下）用户在代币这一条腿上才亏，NFT 是纯增益；</li>
+<li><strong>满额总账</strong>：认购款 5,000 USDT（项目 3,500 / 开池配对 1,500），烧毁 25,000 枚存量；开盘 FDV 约 25,000 USDT — 低开是这个圈子的常态定价，不是缺陷；</li>
+<li><strong>跑不通的情况只有一个</strong>：认购进度中途熄火且没有兜底 — 已由第 6 节比例缩放 + 到期自动开池条款覆盖，任何进度下每份经济账都成立。</li>
+</ul>
+<h2>12. 开盘之后的收入（项目方）</h2>
+<p>第一季的现金在认购期就进账（满额 3,500 USDT 项目收入），开盘后仍有四条收入线，按可靠性排序：</p>
+<ol>
+<li><strong>下一季的认购款（主引擎）</strong>：本项目是按季经营的生意，不是打一季就结束。第二季再开 5,000 枚，又是 5,000 USDT 级别的认购款，且有了第一季的成交记录与持币人群，第二季可以卖得更快、甚至提价。真正的持续收入来自一季接一季地办；</li>
+<li><strong>项目方代币份额</strong>：项目方持有 20%（2,000 万枚，链上锁仓 6 个月线性解锁）。开盘参考市值约 5,000 USDT，若代币随生态热度上涨，这是项目方最大的资产 — 靠它增值赚钱，而不是靠卖飞盘（解锁节奏与出售规则公开，砸盘即毁信誉）；</li>
+<li><strong>项目方赞助费（B2B）</strong>：生态里几百个死盘项目方都想给自家持有人找出口 — 后续季可以收赞助费：付费把某个收藏品列入当季可烧名单、办联名季。对他们来说这比自己重新拉盘便宜得多；</li>
+<li><strong>小额持续项</strong>：新 NFT 的二级版税（5%，ERC-2981 — 交易平台可能不强制执行，按收不到做预算，收到算惊喜）；LP 锁仓期间池子产生的交易手续费（池子小的时候金额微乎其微，随成交量长大）。</li>
+</ol>
+<p>明确不做的：代币买卖税设为 0 — 收税会劝退交易与上所预期，靠税吃差价是短视收入，伤的是代币本身的流动性。</p>
+<p>用户 2026-10-31 在 1U / 1.5U / 2U 三档中选定 <strong>1 USDT / 分账 70/30</strong>：S1 的赚钱策略是先保证卖光与口碑（满额项目现金 3,500U + 项目方 20% 代币份额 + 第一季即开放的赞助位收入），提价放到有成交记录的后续季再谈。
+v0.8 修订：随机数由 Chainlink VRF 改为链上区块哈希方案（用户 2026-10-31 定版，为把运营成本压到零 — VRF 逐季请求费 0.4–4 BNB 且需先注资 0.6 BNB，用户资金条件不允许）；公平性论证改为「未来区块哈希双方都无法影响 + 全程可复算」，并明示其强度弱于 VRF（验证者理论操纵面）。合约已实现并通过 28 项测试（~/workspace/reforge/dev/，ReForgeSeasonBH）。</p>
+<h2>13. 第一季美术（定稿）</h2>
+<p>第一季 NFT 美术已定稿（2026-10-31）：<strong>像素风</strong>，四档同主题（熔炉/回炉重铸）、同构图（正面居中徽章款，A 款），色板随稀有度进化 — 铁灰（普通）→ 铜青（稀有）→ 紫金（史诗）→ 全金凤凰（传说）。B 款四张场景图保留为宣传图，不进盲盒图池。</p>
+<table>
+<thead>
+<tr>
+<th>档位</th>
+<th>概率</th>
+<th>定稿文件</th>
+<th>SHA-256</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>普通 Common</td>
+<td>70%</td>
+<td>common.png</td>
+<td><code>1edd805955b5d94d5c91c8a08d990462e122e0650750bc428e9135edfa07986c</code></td>
+</tr>
+<tr>
+<td>稀有 Rare</td>
+<td>22%</td>
+<td>rare.png</td>
+<td><code>df51cd76ae3be23ac81f52d05d3394f0c6708153663fb63606b2a2f103b71000</code></td>
+</tr>
+<tr>
+<td>史诗 Epic</td>
+<td>6.5%</td>
+<td>epic.png</td>
+<td><code>abbcfcf1d5d0a35bb5a0f8c025903159afe075fff62bec25f9c410a483538f12</code></td>
+</tr>
+<tr>
+<td>传说 Legendary</td>
+<td>1.5%</td>
+<td>legendary.png</td>
+<td><code>38667eedd9426a913b820cdaece78c84cbe84382e566a6d19eaa237660e46283</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Provenance（来源证明，开季前已上链锁定）</strong>：图池承诺哈希已在开季前写入赛季合约，赛季开始后冻结、任何人（包括项目方）不可更改。</p>
+<ul>
+<li>provenanceHash = <code>0x70420f41fdf8b0660a98b03504c99dde56ddd46c878f9a0e67ad26e82b57b55e</code></li>
+<li>复算方法（公开可复算）：按 普通 → 稀有 → 史诗 → 传说 的顺序，对每张定稿 PNG 取 SHA-256（32 字节），四份摘要直接拼接（abi.encodePacked），再对拼接结果取 Keccak-256，即得 provenanceHash。任何人下载四张公开原图即可独立复算并与链上值比对 — 图池在开季前即已承诺，项目方无法在开季后偷换任何一档的图。</li>
+<li>上链交易：<code>setProvenanceHash</code> tx <code>0x9e6da764b85e737424b6b78eccac813ff7d11d5eafcd5cdf31bf3f75e06d1318</code>（区块 130843740），链上读回与计算值一致；写入时赛季尚未启动（started=false）。</li>
+</ul>
+<h2>14. 主网合约</h2>
+<p>第一季全套合约已部署至 BSC 主网（2026-10-31），<strong>6 个合约源码全部在 Sourcify 达到 exact_match</strong>（creation 与 runtime 双精确匹配 — 链上字节码与公开源码逐字节一致，任何人可独立复核「无后门」声明）。赛季尚未启动：未配白名单、未开季，FORGE 转账锁生效中。</p>
+<table>
+<thead>
+<tr>
+<th>合约</th>
+<th>地址</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FORGE 代币（ForgeToken）</td>
+<td><code>0x2961e67bE379d34F9206509f5891EF338558D501</code></td>
+</tr>
+<tr>
+<td>新 NFT（ReForgeNFT）</td>
+<td><code>0xbb20c4533Db422197b1C846DDDdE3780F5826ac4</code></td>
+</tr>
+<tr>
+<td>第一季主合约（ReForgeSeasonBH）</td>
+<td><code>0x3631fB95659ebF6972B5D0da1A7C952165239aa6</code></td>
+</tr>
+<tr>
+<td>团队锁仓（ForgeVesting）</td>
+<td><code>0x8f2cEB2b209ba582A51C57a51dB2486547e79D9F</code></td>
+</tr>
+<tr>
+<td>LP 锁仓（LPLocker）</td>
+<td><code>0x33d457e38F30FFC821113D4d6feFc61d5c1AEac9</code></td>
+</tr>
+<tr>
+<td>建池适配器（LaunchDEXAdapter）</td>
+<td><code>0x83EDF4E562e7a7554e1E5b1b12FF34746e3635f6</code></td>
+</tr>
+</tbody>
+</table>
+<p>部署与验证明细见 ~/workspace/reforge/dev/DEPLOY-MAINNET.md；代币分配已链上核实：赛季合约 56M（空投 50M + 流动性 6M）、团队锁仓 20M（180 天线性）、储备 24M 在项目方 Agentic 钱包。</p>
+<p>v0.9 修订：新增第 13 节（第一季美术定稿：像素风 A 款四档，含各档 SHA-256 与 provenanceHash 复算方法，provenance 已上链锁定）与第 14 节（主网 6 合约地址 + Sourcify exact_match 说明）；其余内容与 v0.8 一致。</p>
+<hr />
+<p><em>v0.6 修订说明：定版参数改为烧 5 枚换 1 资格、第一季总量 5,000 枚、每份空投改为 10,000 枚（总量与分配比例不变）；新增第 11 节可行性测算；防绑死条款新增分配按比例缩放规则。以下为 v0.5 修订说明：收费结构翻转 — 由「烧 + 付费一笔完成」改为两步：烧 10 枚只换认购资格（不收费），拿资格再付 1 USDT 认购铸造（钱在 mint 时当场进账，用户心智是白名单付费 mint，不是被收手续费）；代币分配改为四份（新增后续季储备 24%、流动性由 30% 下调为 6% 以抬高开盘参考价至约 0.0001、每份空投开盘约值 2.5U）；新增第 7 节漏洞修补（快照 tokenId 供应封顶、本季参数冻结、开池自动触发、锁仓上链、单 ID 上限 20）。v0.4 的 70/30 分账、防绑死条款、永不复活承诺保留。</em></p>
+<footer>ReForge 回炉 · Season 1 · BNB Smart Chain · Not financial advice.</footer>
+</div>
+</body>
+</html>
